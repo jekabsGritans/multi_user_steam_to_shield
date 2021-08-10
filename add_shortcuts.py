@@ -1,8 +1,8 @@
-from os import listdir, getlogin, mkdir, getcwd, chdir
+from os import listdir, getlogin, mkdir, getcwd
 from subprocess import call
 from os.path import isdir as dir_exists
 from shutil import move
-
+from getpass import getpass
 ##############################################################################################
 #run setup.py if error
 ##############################################################################################
@@ -10,10 +10,8 @@ from re import search, findall
 from PIL import Image,ImageDraw,ImageFont
 import win32com.client
 ##############################################################################################
-
-
-# from vdf import to_dict
 cwd = getcwd()
+
 ##############################################################################################
 ##############################################################################################
 
@@ -56,15 +54,10 @@ while time()-start<20:
             mkdir('games')
 
         pywpath = f'games\\{self.title} ({self.username}).pyw'
-        batpath = f'games\\{self.title} ({self.username}).bat'
         print(pywpath)
-        print(batpath)
         with open(pywpath,'w') as f:
             f.write(script)
 
-        with open(batpath,'w') as f:
-            f.write(f'start "" "{self.title} ({self.username}).pyw" /popup \n exit')
-        self.batpath = batpath
 
     def add_to_shield(self):
         #add boxart(needed)
@@ -78,11 +71,12 @@ while time()-start<20:
         font = ImageFont.truetype("lib\\NotoSans-Regular.ttf", 50)
         draw.text((0,img.height-75), self.username,(255,255,255),font=font)
         img.save(f'{p}box-art.png')
-        #create a shortcut
-        shell = win32com.client.Dispatch("WScript.shell")
-        shortcut = shell.CrateShortCut(f"{shield_app_dir}{self.title} ({self.username}).lnk")
-        shortcut.Targetpath = f'{cwd}\\games\\{self.title}.bat'
-        shortcut.save()
+        #create bat
+        batpath = f'{shield_app_dir}{self.title} ({self.username}).bat'
+        with open(batpath,'w') as f:
+            f.write(f'start "" "{cwd}\\games\\{self.title} ({self.username}).pyw" /popup \n exit')
+  
+
 
 def read(path):
     with open(path,'r',encoding='Latin-1') as f:
@@ -91,21 +85,12 @@ def read(path):
 users ={}
 
 for user_id in listdir(f'{steam_dir}userdata\\'):
-    # user_info = to_dict(read(f'{steam_dir}userdata\\{user_id}\\config\\localconfig.vdf'))
     user_info = read(f'{steam_dir}userdata\\{user_id}\\config\\localconfig.vdf')
-    # owned_app_ids = [id for id in user_info["UserLocalConfigStore"]["Software"]["Valve"]["steam"]["Apps"]]
     owned_app_ids = [item for item in findall('(\d*)"\n.*\n.*"LastPlayed',user_info)]
-    # personaname = user_info["UserLocalConfigStore"]["friends"]["PersonaName"]
     personaname = search('"PersonaName".*"(.*)"',user_info).group(1)
     users[user_id] = {}
     users[user_id]['PersonaName'] = personaname
-    # login_users = to_dict(read("{steam_dir}config\\loginusers.vdf"))['users']
     login_users = read(f"{steam_dir}config\\loginusers.vdf")
-
-    # for id in login_users:
-    #     if login_users[id]['PersonaName'] == personaname:
-    #         users[user_id]['username'] = login_users[id]['AccountName'] #DEPENDENT ON VDF read
-
     ress = findall('"AccountName".*"(.*)".*\n.*"PersonaName".*"(.*)"',login_users)
     for res in ress:
         accname, personaname_r = res
@@ -114,7 +99,7 @@ for user_id in listdir(f'{steam_dir}userdata\\'):
 
     users[user_id]['apps'] = owned_app_ids
 
-    users[user_id]['password']=input(f'Enter password for {users[user_id]["username"]}: ')
+    users[user_id]['password']=getpass(f'Enter password for {users[user_id]["username"]}: ')
 
 
 
@@ -125,11 +110,8 @@ acfs = [file for file in dir if file.endswith("acf")]
 games=[]
 
 for acf in acfs:
-    # manifest = to_dict(read(f"{steam_dir}steamapps\\{acf}"))
     manifest = read(f"{steam_dir}steamapps\\{acf}")
-    #appid = manifest['AppState']['appid']
     appid = search('"appid"	*"(\d*)"',manifest).group(1)
-    # name = manifest['AppState']['name']
     name = search('"name"	*"(.*)"',manifest).group(1)
     for user in users:
         user = users[user]
