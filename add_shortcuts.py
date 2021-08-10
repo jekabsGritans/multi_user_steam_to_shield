@@ -65,7 +65,8 @@ while time()-start<20:
     def add_to_shield(self):
         #add boxart(needed)
         p = f"{shield_app_dir}StreamingAssets\\{self.title} ({self.username})\\"
-        mkdir(p)
+        if not dir_exists(p):
+            mkdir(p)
         try:
             img = Image.open(self.boxart_path)
         except:
