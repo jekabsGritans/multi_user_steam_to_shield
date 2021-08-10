@@ -1,4 +1,5 @@
-from os import listdir, getlogin, mkdir, getcwd
+from os import listdir, getlogin, mkdir, getcwd,chdir
+from sys import path as syspath
 from subprocess import call
 from os.path import isdir as dir_exists
 from shutil import move
@@ -8,8 +9,10 @@ from getpass import getpass
 ##############################################################################################
 from re import search, findall
 from PIL import Image,ImageDraw,ImageFont
-import win32com.client
+from win32com.client import Dispatch
+
 ##############################################################################################
+chdir(syspath[0])
 cwd = getcwd()
 
 ##############################################################################################
@@ -71,12 +74,17 @@ while time()-start<20:
         font = ImageFont.truetype("lib\\NotoSans-Regular.ttf", 50)
         draw.text((0,img.height-75), self.username,(255,255,255),font=font)
         img.save(f'{p}box-art.png')
-        #create bat
-        batpath = f'{shield_app_dir}{self.title} ({self.username}).bat'
-        with open(batpath,'w') as f:
-            f.write(f'start "" "{cwd}\\games\\{self.title} ({self.username}).pyw" /popup \n exit')
-  
 
+        #Create shortcut
+        path = shield_app_dir+f'{self.title} ({self.username}).lnk'
+        target = f"{cwd}\\games\\{self.title} ({self.username}).pyw"
+        wDir = f"{cwd}\\games"
+
+        shell = Dispatch('WScript.Shell')
+        shortcut = shell.CreateShortCut(path)
+        shortcut.Targetpath = target
+        shortcut.WorkingDirectory = wDir
+        shortcut.save()
 
 def read(path):
     with open(path,'r',encoding='Latin-1') as f:
