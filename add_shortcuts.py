@@ -2,7 +2,7 @@ from os import listdir, getlogin, mkdir, getcwd,chdir
 from sys import path as syspath
 from subprocess import call
 from os.path import isdir as dir_exists
-from shutil import move
+from shutil import copyfile
 from getpass import getpass
 ##############################################################################################
 #run setup.py if error
@@ -19,6 +19,24 @@ shield_app_dir = f"C:\\Users\\{getlogin()}\\AppData\\local\\NVIDIA Corporation\\
 
 chdir(syspath[0])
 cwd = getcwd()
+
+#add desktop
+path = shield_app_dir+'Desktop.lnk'
+target = "C:\\windows\\System32\\mstsc.exe"
+wDir = "C:\\windows\\System32"
+
+shell = Dispatch('WScript.Shell')
+shortcut = shell.CreateShortCut(path)
+shortcut.Targetpath = target
+shortcut.WorkingDirectory = wDir
+shortcut.save()
+
+deskartdir = f'{shield_app_dir}StreamingAssets\\Desktop'
+if not dir_exists(deskartdir):
+    mkdir(deskartdir)
+copyfile(f"{cwd}\\lib\\desk.jpg",f"{deskartdir}\\box-art.png")
+
+############
 
 boxart_dir = f"{steam_dir}appcache\\librarycache\\"
 script_steam_dir = steam_dir.replace('\\','\\\\')
